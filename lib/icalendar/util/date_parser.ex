@@ -75,9 +75,7 @@ defmodule ICalendar.Util.DateParser do
     date = {year, month, day}
     time = {hour, minutes, seconds}
 
-    {to_integers(date), to_integers(time)}
-    |> NaiveDateTime.from_erl!()
-    |> DateTime.from_naive!("Etc/UTC")
+    to_datetime(date, time, "Etc/UTC")
   end
 
   # Date Format: "19690620T201804", Timezone: nil
@@ -89,9 +87,7 @@ defmodule ICalendar.Util.DateParser do
     date = {year, month, day}
     time = {hour, minutes, seconds}
 
-    {to_integers(date), to_integers(time)}
-    |> NaiveDateTime.from_erl!()
-    |> DateTime.from_naive!("Etc/UTC")
+    to_datetime(date, time, "Etc/UTC")
   end
 
   # Date Format: "19690620T201804", Timezone: *
@@ -103,20 +99,50 @@ defmodule ICalendar.Util.DateParser do
     date = {year, month, day}
     time = {hour, minutes, seconds}
 
-    {to_integers(date), to_integers(time)}
-    |> Timex.to_datetime(timezone)
+    to_datetime(date, time, timezone)
   end
 
   # Date Format: "19690620Z", Timezone: *
   def parse(<<year::binary-size(4), month::binary-size(2), day::binary-size(2), "Z">>, _timezone) do
-    {to_integers({year, month, day}), {0, 0, 0}}
-    |> Timex.to_datetime()
+    date = {year, month, day}
+    time = {"00", "00", "00"}
+
+    to_datetime(date, time, "Etc/UTC")
   end
 
   # Date Format: "19690620", Timezone: *
-  def parse(<<year::binary-size(4), month::binary-size(2), day::binary-size(2)>>, _timezone) do
-    {to_integers({year, month, day}), {0, 0, 0}}
-    |> Timex.to_datetime()
+  def parse(<<year::binary-size(4), month::binary-size(2), day::binary-size(2)>>, timezone) do
+    date = {year, month, day}
+    time = {"00", "00", "00"}
+
+    to_datetime(date, time, timezone)
+  end
+
+  # Date Format: "1993/04/07Z", Timezone: *
+  def parse(
+        <<year::binary-size(4), "/", month::binary-size(2), "/", day::binary-size(2), "Z">>,
+        _timezone
+      ) do
+    date = {year, month, day}
+    time = {"00", "00", "00"}
+
+    to_datetime(date, time, "Etc/UTC")
+  end
+
+  # Date Format: "1993/04/07", Timezone: *
+  def parse(
+        <<year::binary-size(4), "/", month::binary-size(2), "/", day::binary-size(2)>>,
+        timezone
+      ) do
+    date = {year, month, day}
+    time = {"00", "00", "00"}
+
+    to_datetime(date, time, timezone)
+  end
+
+  # Incorrect date format
+  def parse(_datetime, _timezone) do
+    raise ArgumentError, message: "Invalid date or time format"
   end
 
   @spec to_integers({String.t(), String.t(), String.t()}) :: {integer, integer, integer}
@@ -126,5 +152,16 @@ defmodule ICalendar.Util.DateParser do
       String.to_integer(str2),
       String.to_integer(str3)
     }
+  end
+
+  @spec to_datetime(
+          {String.t(), String.t(), String.t()},
+          {String.t(), String.t(), String.t()},
+          valid_timezone
+        ) :: %DateTime{}
+  defp to_datetime(date, time, timezone) do
+    {to_integers(date), to_integers(time)}
+    |> NaiveDateTime.from_erl!()
+    |> DateTime.from_naive!(timezone)
   end
 end

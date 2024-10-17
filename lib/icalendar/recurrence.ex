@@ -64,8 +64,8 @@ defmodule ICalendar.Recurrence do
 
   ## Examples
 
-      iex> dt = Timex.Date.from({2016,8,13})
-      iex> dt_end = Timex.Date.from({2016, 8, 23})
+      iex> dt = DateTime.new!(~D[2016-08-13], ~T[00:00:00])
+      iex> dt_end = DateTime.new!(~D[2016-08-23], ~T[00:00:00])
       iex> event = %ICalendar.Event{rrule:%{freq: "DAILY"}, dtstart: dt, dtend: dt}
       iex> recurrences =
             ICalendar.Recurrence.get_recurrences(event)
@@ -92,73 +92,73 @@ defmodule ICalendar.Recurrence do
         Stream.map([nil], fn _ -> [] end)
 
       %{freq: "DAILY", count: count, interval: interval} ->
-        add_recurring_events_count(event, reference_events, count, days: interval)
+        add_recurring_events_count(event, reference_events, count, day: interval)
 
       %{freq: "DAILY", until: until, interval: interval} ->
-        add_recurring_events_until(event, reference_events, until, days: interval)
+        add_recurring_events_until(event, reference_events, until, day: interval)
 
       %{freq: "DAILY", count: count} ->
-        add_recurring_events_count(event, reference_events, count, days: 1)
+        add_recurring_events_count(event, reference_events, count, day: 1)
 
       %{freq: "DAILY", until: until} ->
-        add_recurring_events_until(event, reference_events, until, days: 1)
+        add_recurring_events_until(event, reference_events, until, day: 1)
 
       %{freq: "DAILY", interval: interval} ->
-        add_recurring_events_until(event, reference_events, end_date, days: interval)
+        add_recurring_events_until(event, reference_events, end_date, day: interval)
 
       %{freq: "DAILY"} ->
-        add_recurring_events_until(event, reference_events, end_date, days: 1)
+        add_recurring_events_until(event, reference_events, end_date, day: 1)
 
       %{freq: "WEEKLY", until: until, interval: interval} ->
-        add_recurring_events_until(event, reference_events, until, days: interval * 7)
+        add_recurring_events_until(event, reference_events, until, day: interval * 7)
 
       %{freq: "WEEKLY", count: count} ->
-        add_recurring_events_count(event, reference_events, count, days: 7)
+        add_recurring_events_count(event, reference_events, count, day: 7)
 
       %{freq: "WEEKLY", until: until} ->
-        add_recurring_events_until(event, reference_events, until, days: 7)
+        add_recurring_events_until(event, reference_events, until, day: 7)
 
       %{freq: "WEEKLY", interval: interval} ->
-        add_recurring_events_until(event, reference_events, end_date, days: interval * 7)
+        add_recurring_events_until(event, reference_events, end_date, day: interval * 7)
 
       %{freq: "WEEKLY"} ->
-        add_recurring_events_until(event, reference_events, end_date, days: 7)
+        add_recurring_events_until(event, reference_events, end_date, day: 7)
 
       %{freq: "MONTHLY", count: count, interval: interval} ->
-        add_recurring_events_count(event, reference_events, count, months: interval)
+        add_recurring_events_count(event, reference_events, count, month: interval)
 
       %{freq: "MONTHLY", until: until, interval: interval} ->
-        add_recurring_events_until(event, reference_events, until, months: interval)
+        add_recurring_events_until(event, reference_events, until, month: interval)
 
       %{freq: "MONTHLY", count: count} ->
-        add_recurring_events_count(event, reference_events, count, months: 1)
+        add_recurring_events_count(event, reference_events, count, month: 1)
 
       %{freq: "MONTHLY", until: until} ->
-        add_recurring_events_until(event, reference_events, until, months: 1)
+        add_recurring_events_until(event, reference_events, until, month: 1)
 
       %{freq: "MONTHLY", interval: interval} ->
-        add_recurring_events_until(event, reference_events, end_date, months: interval)
+        add_recurring_events_until(event, reference_events, end_date, month: interval)
 
       %{freq: "MONTHLY"} ->
-        add_recurring_events_until(event, reference_events, end_date, months: 1)
+        add_recurring_events_until(event, reference_events, end_date, month: 1)
 
       %{freq: "YEARLY", count: count, interval: interval} ->
-        add_recurring_events_count(event, reference_events, count, years: interval)
+        add_recurring_events_count(event, reference_events, count, year: interval)
 
       %{freq: "YEARLY", until: until, interval: interval} ->
-        add_recurring_events_until(event, reference_events, until, years: interval)
+        add_recurring_events_until(event, reference_events, until, year: interval)
 
       %{freq: "YEARLY", count: count} ->
-        add_recurring_events_count(event, reference_events, count, years: 1)
+        add_recurring_events_count(event, reference_events, count, year: 1)
 
       %{freq: "YEARLY", until: until} ->
-        add_recurring_events_until(event, reference_events, until, years: 1)
+        add_recurring_events_until(event, reference_events, until, year: 1)
 
       %{freq: "YEARLY", interval: interval} ->
-        add_recurring_events_until(event, reference_events, end_date, years: interval)
+        add_recurring_events_until(event, reference_events, end_date, year: interval)
 
       %{freq: "YEARLY"} ->
-        add_recurring_events_until(event, reference_events, end_date, years: 1)
+        add_recurring_events_until(event, reference_events, end_date, year: 1)
     end
   end
 
@@ -178,8 +178,8 @@ defmodule ICalendar.Recurrence do
               Enum.map(prev_event_batch, fn reference_event ->
                 new_event = shift_event(reference_event, shift_opts)
 
-                case Timex.compare(new_event.dtstart, until) do
-                  1 -> []
+                case DateTime.compare(new_event.dtstart, until) do
+                  :gt -> []
                   _ -> [new_event]
                 end
               end)
@@ -237,13 +237,7 @@ defmodule ICalendar.Recurrence do
   end
 
   defp shift_date(date, shift_opts) do
-    case Timex.shift(date, shift_opts) do
-      %Timex.AmbiguousDateTime{} = new_date ->
-        new_date.after
-
-      new_date ->
-        new_date
-    end
+    DateTime.shift(date, shift_opts)
   end
 
   defp build_refernce_events_by_x_rules(event, by_x_rrules) do
@@ -268,11 +262,12 @@ defmodule ICalendar.Recurrence do
         day_atom = byday |> String.downcase() |> String.to_atom()
 
         # determine the difference between the byday and the event's dtstart
-        day_offset_for_reference = Map.get(@day_values, day_atom) - Timex.weekday(event.dtstart)
+        day_offset_for_reference =
+          Map.get(@day_values, day_atom) - Date.day_of_week(event.dtstart)
 
         Map.merge(event, %{
-          dtstart: Timex.shift(event.dtstart, days: day_offset_for_reference),
-          dtend: Timex.shift(event.dtend, days: day_offset_for_reference)
+          dtstart: DateTime.add(event.dtstart, day_offset_for_reference, :day),
+          dtend: DateTime.add(event.dtend, day_offset_for_reference, :day)
         })
       else
         # Ignore the invalid byday value

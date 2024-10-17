@@ -19,10 +19,10 @@ defmodule ICalendar.Util.KV do
   DateTime values will add timezones:
 
       iex> date =
-      ...>   {{2015, 12, 24}, {8, 30, 0}}
-      ...>   |> Timex.to_datetime("America/Chicago")
+      ...>   ~U[2015-12-24 08:30:00Z]
+      ...>   |> DateTime.shift_zone!("America/Chicago")
       ...> ICalendar.Util.KV.build("foo", date)
-      "foo;TZID=America/Chicago:20151224T083000\n"
+      "foo;TZID=America/Chicago:20151224T023000\n"
 
   Attendees get their own line, each:
 
