@@ -211,28 +211,26 @@ defmodule ICalendar.Util.Deserialize do
 
   It should be able to handle dates from the past:
 
-      iex> {:ok, date} = ICalendar.Util.Deserialize.to_date("19930407T153022Z")
-      ...> Timex.to_erl(date)
-      {{1993, 4, 7}, {15, 30, 22}}
+      iex> ICalendar.Util.Deserialize.to_date("19930407T153022Z")
+      {:ok, ~U[1993-04-07 15:30:22Z]}
 
   As well as the future:
 
-      iex> {:ok, date} = ICalendar.Util.Deserialize.to_date("39930407T153022Z")
-      ...> Timex.to_erl(date)
-      {{3993, 4, 7}, {15, 30, 22}}
+      iex> ICalendar.Util.Deserialize.to_date("39930407T153022Z")
+      {:ok, ~U[3993-04-07 15:30:22Z]}
 
   And should return error for incorrect dates:
 
-      iex> ICalendar.Util.Deserialize.to_date("1993/04/07")
-      {:error, "Expected `2 digit month` at line 1, column 5."}
+      iex> ICalendar.Util.Deserialize.to_date("1993/4/07Z")
+      {:error, "Invalid date or time format"}
 
   It should handle timezones from  the Olson Database:
 
-      iex> {:ok, date} = ICalendar.Util.Deserialize.to_date("19980119T020000",
-      ...> %{"TZID" => "America/Chicago"})
-      ...> [Timex.to_erl(date), date.time_zone]
-      [{{1998, 1, 19}, {2, 0, 0}}, "America/Chicago"]
+      iex> {:ok, datetime} = ICalendar.Util.Deserialize.to_date("19980119T020000", %{"TZID" => "America/Chicago"})
+      iex> datetime
+      #DateTime<1998-01-19 02:00:00-06:00 CST America/Chicago>
   """
+
   def to_date(date_string, %{"TZID" => timezone}) do
     # Microsoft Outlook calendar .ICS files report times in Greenwich Standard Time (UTC +0)
     # so just convert this to UTC
@@ -240,16 +238,14 @@ defmodule ICalendar.Util.Deserialize do
       if Regex.match?(~r/\//, timezone) do
         timezone
       else
-        Timex.Timezone.Utils.to_olson(timezone)
+        "Etc/UTC"
       end
 
-    date_string =
-      case String.last(date_string) do
-        "Z" -> date_string
-        _ -> date_string <> "Z"
-      end
-
-    Timex.parse(date_string <> timezone, "{YYYY}{0M}{0D}T{h24}{m}{s}Z{Zname}")
+    try do
+      {:ok, ICalendar.Util.DateParser.parse(date_string, timezone)}
+    rescue
+      e in ArgumentError -> {:error, e.message}
+    end
   end
 
   def to_date(date_string, %{"VALUE" => "DATE"}) do
