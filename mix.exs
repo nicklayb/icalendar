@@ -2,7 +2,7 @@ defmodule ICalendar.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/lpil/icalendar"
-  @version "1.1.3"
+  @version "1.2.1"
 
   def project do
     [
@@ -17,10 +17,6 @@ defmodule ICalendar.Mixfile do
       docs: docs(),
       package: package()
     ]
-  end
-
-  def application do
-    [applications: [:zoneinfo]]
   end
 
   defp deps do
