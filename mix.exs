@@ -25,7 +25,7 @@ defmodule ICalendar.Mixfile do
 
   defp deps do
     [
-      {:zoneinfo, "~> 0.1.0"},
+      {:zoneinfo, "~> 0.1.0", only: [:dev, :test]},
       {:mix_test_watch, ">= 0.0.0", only: :dev},
       {:ex_doc, ">= 0.0.0", only: [:dev, :test], runtime: false}
     ]

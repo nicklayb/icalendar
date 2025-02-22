@@ -1,3 +1,3 @@
 import Config
 
-config :elixir, :time_zone_database, Zoneinfo.TimeZoneDatabase
+import_config("test.exs")
