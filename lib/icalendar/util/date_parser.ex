@@ -159,6 +159,10 @@ defmodule ICalendar.Util.DateParser do
           {String.t(), String.t(), String.t()},
           valid_timezone
         ) :: %DateTime{}
+  defp to_datetime(date, time, nil) do
+    to_datetime(date, time, "Etc/UTC")
+  end
+
   defp to_datetime(date, time, timezone) do
     {to_integers(date), to_integers(time)}
     |> NaiveDateTime.from_erl!()
