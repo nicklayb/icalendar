@@ -237,7 +237,10 @@ defmodule ICalendar.Recurrence do
   end
 
   defp shift_date(date, shift_opts) do
-    DateTime.shift(date, shift_opts)
+    date
+    |> DateTime.to_naive()
+    |> NaiveDateTime.shift(shift_opts)
+    |> DateTime.from_naive!(date.time_zone)
   end
 
   defp build_refernce_events_by_x_rules(event, by_x_rrules) do
